@@ -1,0 +1,68 @@
+=head1 NAME
+
+Bespoke - an asset management system for every possible artifact involved with IT operations
+
+=head1 FIRST
+
+The thoughts below are a first-pass braindump. Take with salt and flame me at tobert@gmail.com,
+@AlTobey on twitter, or "tobert" on Freenode IRC ##devops or ##infra-talk.
+
+=head1 SYNOPSIS
+
+Bespoke's goal is to track /all/ of the artifacts in your system - where system means all your
+operating systems, firmware, switch configs, scripts, binaries, packages, and intermediate objects, etc.
+
+It will track all of these things across the past, present, and future. So down the road when you
+get asked to do forensics on some logs from a month ago, you don't have to wonder what the bit-for-bit
+configuration was when the logs were generated. You'll have the bits.
+
+In order to accomplish this goal, Bespoke implements a simple Content Addressible Storage system on
+top of an underlying filesystem. A CAS system offers free deduplication at the cost of having metadata
+loosely coupled from the data it points at. For Bespoke, this is great, since it needs to generate
+a bunch of different views into the data anyways.
+
+=head1 DESCRIPTION
+
+The infrastructure as code idea is growing in leaps and bounds right now. The current state of the
+art focuses this (grossly) around two subsystems, configuration management (e.g. Puppet, Chef, BCFG2,
+Spine, CFEngine, etc.) and real-time control systems (mcollective, fabric, capistrano).
+
+Obviously, if you're managing your infrastructure as code, you should manage that code in some kind
+of source control system. This is good and true and dissenters should burn.
+
+This leaves out a ton of data though.
+
+=over 4
+
+=item packages
+
+OS packages, jars, gems, pars, eggs, tarballs, rsync modules
+
+=item hand-rolled binaries
+
+/usr/local/bin/bash /sbin/busybox
+
+=item miscellaneous scripts
+
+You know you still have some. Cron jobs, config scripts, monitoring hacks, etc.
+
+/usr/local/bin/*.sh
+
+=item deployed code
+
+The stuff engineering flings over the wall. It could be anything.
+
+=item intermediate artifacts
+
+Puppet graph dumps, DDL (database table definitions) dumps, transition scripts, not-really-tempfiles
+
+=back
+
+The reason a lot of this isn't kept around is optimization. A 200-node network could easily chew up a few
+terabytes keeping everything but the meat-and-potatoes data on a secondary system.
+
+Bespoke solves the problem by providing its CAS and a multitude of views into the CAS so runtime
+data can be forward engineered, reverse engineered, and queried in as many useful ways as possible.
+
+=cut
+

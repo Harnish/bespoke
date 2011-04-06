@@ -1,0 +1,4 @@
+* already decided I'm going to remove the $config from Bespoke::Base->init's
+  return list, since it's only used in a few places and the class method
+  works just fine
+* implement some example views into the CAS

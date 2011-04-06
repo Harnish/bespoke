@@ -7,6 +7,24 @@ Bespoke - an asset management system for every possible artifact involved with I
 The thoughts below are a first-pass braindump. Take with salt and flame me at tobert@gmail.com,
 @AlTobey on twitter, or "tobert" on Freenode IRC ##devops or ##infra-talk.
 
+=head1 CHOICES
+
+This implementation is in perl. I chose perl because I can write it as fast as I think of things,
+but the backend is by no means specific to perl. I will likely implement pieces in ruby,
+javascript/node.js, and python as personal experiments.
+
+For the CAS, I chose SHA512 so I never have to think about that choice again or offer any kind
+of configuration around it. On 64-bit machines, it's plenty fast and storage is cheap.
+
+The UUID's for metadata are using perl Data::UUID's default, which appears to be UUIDv1. It doesn't
+matter one whit so that could change down the road, though it will likely stay some kind of UUID.
+
+The choice of both SHA512 and UUID are to make scalability as implicit as possible. The filesystem
+can be fragmented along the first two levels of the directory structure that uses the first 32
+bits of the SHA512 in hex. It would be trivial to divide the storage across 256 vnodes and distribute
+those to many machines, but distributed systems is not a goal at the moment. The UUID-based metadata
+files allow adding metadata instances with little regard to other instances or coordination.
+
 =head1 SYNOPSIS
 
 Bespoke's goal is to track /all/ of the artifacts in your system - where system means all your

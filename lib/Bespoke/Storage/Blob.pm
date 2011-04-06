@@ -48,7 +48,7 @@ Create an object for working with blobs.
 =cut
 
 sub new {
-    my($self, $config, %args) = shift->init(@_, required => ['digest']);
+    my($self, %args) = shift->init(@_, required => ['digest']);
 
     my $blob_path = Bespoke::Storage->digest_to_path(
         digest   => $args{digest},

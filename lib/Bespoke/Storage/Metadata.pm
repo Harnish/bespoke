@@ -69,7 +69,7 @@ Return an object for accessing storage metadata.
 =cut
 
 sub new {
-    my($class, $config, %args) = shift->init(@_, required => ['digest', 'instance']);
+    my($class, %args) = shift->init(@_, required => ['digest', 'instance']);
 
     # each instance is in a metadata-$NUMBER.json file
     my $filename = Bespoke::Storage->digest_to_path(
@@ -101,7 +101,7 @@ is called.
 =cut
 
 sub create {
-    my($class, $config, %args) = shift->init(@_, required => ['digest']);
+    my($class, %args) = shift->init(@_, required => ['digest']);
 
     my $ug = Data::UUID->new();
     my $instance = lc($ug->create_str());
@@ -189,7 +189,7 @@ which you shouldn't be doing.
 =cut
 
 sub read {
-    my($self, $config, %args) = shift->init(@_);
+    my($self, %args) = shift->init(@_);
 
     open(my $fh, "< $self->{filename}")
         or confess "Could open read metadata file $self->{filename} for reading: $!";
@@ -214,7 +214,7 @@ valid when create()'ing a new object.
 =cut
 
 sub write {
-    my($self, $config, %args) = shift->init(@_);
+    my($self, %args) = shift->init(@_);
 
     confess "write() is impossible on immutable metadata objects"
         unless ($self->{__writeable});

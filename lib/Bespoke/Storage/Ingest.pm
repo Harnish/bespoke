@@ -55,10 +55,11 @@ filesystem to allow the final move operation to be atomic and copy-less.
 =cut
 
 sub new {
-    my($class, $config, %args) = shift->init(@_);
+    my($class, %args) = shift->init(@_);
 
     my $filename = $class->_tmpfile();
-    my $filepath = File::Spec->catdir($config->get('storage_temp'), $filename);
+    my $stortemp = $class->get_config(@_)->get('storage_temp');
+    my $filepath = File::Spec->catdir($stortemp, $filename);
 
     # IO::Handle/IO::File could be used here but are totally pointless
     # abstractions, especially if you look at the code. Just use the
@@ -112,7 +113,7 @@ same data to the digest object or your store will be corrupt.
 =cut
 
 sub write {
-    my($self, $config, %args) = shift->init(@_);
+    my($self, %args) = shift->init(@_);
 
     # update SHA digest
     $self->{digest}->add($args{data});

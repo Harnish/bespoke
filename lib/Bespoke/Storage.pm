@@ -75,7 +75,8 @@ File::Spec->catdir is used internally to join paths.
 =cut
 
 sub digest_to_path {
-    my($self, $config, %args) = shift->init(@_, required => ['digest']);
+    my($self, %args) = shift->init(@_, required => ['digest']);
+    my $config = $self->get_config(@_);
 
     my @path = (
         $config->get('storage_root'), # /root
@@ -107,7 +108,8 @@ it's just not worth spending the disk space.
 =cut
 
 sub initialize {
-    my($self, $config, %args) = shift->init(@_);
+    my($self, %args) = shift->init(@_);
+    my $config = $self->get_config(@_);
 
     my $base = $config->get('storage_root');
 
@@ -151,7 +153,7 @@ sub _verify_visitor {
 }
 
 sub verify {
-    my($self, $config, %args) = shift->init(@_);
+    my($self, %args) = shift->init(@_);
 
     $self->visit_all(
         visitor => &_verify_visitor
@@ -187,7 +189,7 @@ With the 'arguments' parameter, the extra parameters from the arrayref will be p
 =cut
 
 sub visit_all {
-    my($self, $config, %args) = shift->init(@_, required => ['visitor']);
+    my($self, %args) = shift->init(@_, required => ['visitor']);
     my @vargs;
 
     confess "'visitor' value must be a subroutine reference"
@@ -202,7 +204,7 @@ sub visit_all {
         }
     }
 
-    my $base = $config->get('storage_root');
+    my $base = $self->get_config(@_)->get('storage_root');
 
     for (my $i=0; $i<16; $i++) {
         my $top = File::Spec->catdir($base, sprintf('%02x', $i));
@@ -240,7 +242,7 @@ Automatically parallelized (via fork()) visitation to every node in the storage 
 =cut
 
 sub visit_parallel {
-    my($self, $config, %args) = shift->init(@_);
+    my($self, %args) = shift->init(@_);
 }
 
 =back

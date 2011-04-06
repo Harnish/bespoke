@@ -1,4 +1,4 @@
-* already decided I'm going to remove the $config from Bespoke::Base->init's
-  return list, since it's only used in a few places and the class method
-  works just fine
+* removed $config from init()'s return list, still considering removal
+  of ::Base supporting config objects being passed around and just have
+  the singleton class in Bespoke::Config.
 * implement some example views into the CAS

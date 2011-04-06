@@ -14,12 +14,10 @@ package Bespoke::Base;
 use strict;
 use warnings;
 use Carp;
-use Scalar::Util qw(blessed);
+use Scalar::Util qw(blessed reftype);
 
 use version 0.77; our $VERSION = version->declare("v0.0.1");
 require Bespoke::Config;
-
-our $config_singleton;
 
 =head1 NAME
 
@@ -44,7 +42,7 @@ some accessors for Bespoke::Config.
 Takes care of all the boilerplate method initialization.
 
  sub foo {
-     my($self, $config, %args) = shift->init(@_);
+     my($self, %args) = shift->init(@_);
      ...
  }
 
@@ -56,7 +54,7 @@ Takes care of all the boilerplate method initialization.
 Minimal argument presence checking is supported.
 
  sub bar {
-     my($self, $config, %args) = shift->init(@_, required => ['asdf']);
+     my($self, %args) = shift->init(@_, required => ['asdf']);
      ...
  }
 
@@ -106,24 +104,7 @@ sub init {
         }
     }
 
-    my $config = $self->get_config(%args_out);
-
-    return($self, $config, %args_out);
-}
-
-=item init_positional()
-
-Like init() but for positional (usually 1) arguments. For most functions with > 1 parameter,
-arguments should be forced to be named.
-
- my($self, $config, @args) = shift->init_positional(@_);
-
-=cut
-
-sub init_positional {
-    my $self = shift;
-    my $config = $self->get_config(@_);
-    return($self, $config, @_);
+    return($self, %args_out);
 }
 
 =item set_config()
@@ -131,8 +112,12 @@ sub init_positional {
 =cut
 
 sub set_config {
-    my($self, $config, %args) = shift->init(@_);
-    $self->{config} = $config;
+    my($self, %args) = shift->init(@_);
+
+    confess "set_config() only works on hash-based objects"
+        unless (reftype($self) eq 'HASH');
+    
+    $self->{config} = $args{config};
 }
 
 =item get_config()
@@ -152,7 +137,7 @@ sub get_config {
     my($config) = grep { ref($_) eq 'Bespoke::Config' } @_;
 
     # most to least specific
-    if ($config) {
+    if ($config && blessed $config) {
         return $config;
     }
     elsif (blessed($self) and ref($self->{config}) eq 'Bespoke::Config') {

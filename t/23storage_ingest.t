@@ -33,7 +33,7 @@ ok(my $in2 = Bespoke::Storage::Ingest->new(), "new()");
 my($txtfile, $digest2) = Bespoke::TestUtil->text_test_file();
 ok(open(my $fh, "< $txtfile"), "open test text file, $txtfile");
 while (my $line = <$fh>) {
-    $in2->write(data => $line), "write()";
+    $in2->write(data => $line);
 }
 close $fh;
 ok(my $blob2 = $in2->finish, "finish()");
@@ -44,7 +44,7 @@ is($blob2->digest, $digest2, "Compare hard-coded digest to blob's digest");
 # third set: write random binary data from /dev/urandom to a blob
 diag("\n/dev/urandom -> memory -> blob\n\n");
 
-open(my $fh, "</dev/urandom")
+open($fh, "</dev/urandom")
     or die "Could not open /dev/urandom for reading: $!";
 binmode($fh);
 ok(read($fh, my $bindata, 8192) == 8192, "read some binary data from /dev/urandom");

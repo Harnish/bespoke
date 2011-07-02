@@ -1,4 +1,0 @@
-* removed $config from init()'s return list, still considering removal
-  of ::Base supporting config objects being passed around and just have
-  the singleton class in Bespoke::Config.
-* implement some example views into the CAS

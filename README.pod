@@ -1,86 +1,26 @@
 =head1 NAME
 
-Bespoke - an asset management system for every possible artifact involved with IT operations
+Retooling. Going to use git as the default backend for everything.
+
+Check out example.bs.
 
 =head1 FIRST
 
-The thoughts below are a first-pass braindump. Take with salt and flame me at tobert@gmail.com,
+This is a first-pass braindump. Take with salt and flame me at tobert@gmail.com,
 @AlTobey on twitter, or "tobert" on Freenode IRC ##devops or ##infra-talk.
 
 =head1 CHOICES
 
-This implementation is in perl. I chose perl because I can write it as fast as I think of things,
-but the backend is by no means specific to perl. I will likely implement pieces in ruby,
-javascript/node.js, and python as personal experiments.
+Perl: it's still my strongest language, it's everywhere, and it's stable, both API and runtime
 
-For the CAS, I chose SHA512 so I never have to think about that choice again or offer any kind
-of configuration around it. On 64-bit machines, it's plenty fast and storage is cheap.
+=head1 TODO
 
-The UUID's for metadata are using perl Data::UUID's default, which appears to be UUIDv1. It doesn't
-matter one whit so that could change down the road, though it will likely stay some kind of UUID.
+1.) Figure out some kind of a process tree session that makes sense for bespoke calling
+bs scripts that call bespoke and so on in such a way that it can do stateful things. This
+is going to be most critical when figuring out the dependency graph on the fly.
 
-The choice of both SHA512 and UUID are to make scalability as implicit as possible. The filesystem
-can be fragmented along the first two levels of the directory structure that uses the first 32
-bits of the SHA512 in hex. It would be trivial to divide the storage across 256 vnodes and distribute
-those to many machines, but distributed systems is not a goal at the moment. The UUID-based metadata
-files allow adding metadata instances with little regard to other instances or coordination.
-
-=head1 SYNOPSIS
-
-Bespoke's goal is to track /all/ of the artifacts in your system - where system means all your
-operating systems, firmware, switch configs, scripts, binaries, packages, and intermediate objects, etc.
-
-It will track all of these things across the past, present, and future. So down the road when you
-get asked to do forensics on some logs from a month ago, you don't have to wonder what the bit-for-bit
-configuration was when the logs were generated. You'll have the bits.
-
-In order to accomplish this goal, Bespoke implements a simple Content Addressible Storage system on
-top of an underlying filesystem. A CAS system offers free deduplication at the cost of having metadata
-loosely coupled from the data it points at. For Bespoke, this is great, since it needs to generate
-a bunch of different views into the data anyways.
-
-=head1 DESCRIPTION
-
-The infrastructure as code idea is growing in leaps and bounds right now. The current state of the
-art focuses this (grossly) around two subsystems, configuration management (e.g. Puppet, Chef, BCFG2,
-Spine, CFEngine, etc.) and real-time control systems (mcollective, fabric, capistrano).
-
-Obviously, if you're managing your infrastructure as code, you should manage that code in some kind
-of source control system. This is good and true and dissenters should burn.
-
-This leaves out a ton of data though.
-
-=over 4
-
-=item packages
-
-OS packages, jars, gems, pars, eggs, tarballs, rsync modules
-
-=item hand-rolled binaries
-
-/usr/local/bin/bash /sbin/busybox
-
-=item miscellaneous scripts
-
-You know you still have some. Cron jobs, config scripts, monitoring hacks, etc.
-
-/usr/local/bin/*.sh
-
-=item deployed code
-
-The stuff engineering flings over the wall. It could be anything.
-
-=item intermediate artifacts
-
-Puppet graph dumps, DDL (database table definitions) dumps, transition scripts, not-really-tempfiles
-
-=back
-
-The reason a lot of this isn't kept around is optimization. A 200-node network could easily chew up a few
-terabytes keeping everything but the meat-and-potatoes data on a secondary system.
-
-Bespoke solves the problem by providing its CAS and a multitude of views into the CAS so runtime
-data can be forward engineered, reverse engineered, and queried in as many useful ways as possible.
+2.) see what options are available over git/git-http protocol for single object &
+partial exports.
 
 =cut
 

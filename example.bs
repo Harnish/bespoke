@@ -1,0 +1,113 @@
+#!/bin/bash
+
+###########################################################################
+#                                                                         #
+# Bespoke - example BS script                                             #
+# Copyright 2011-2011, Albert P. Tobey <tobert@gmail.com>                 #
+# https://github.com/tobert/bespoke                                       #
+#                                                                         #
+# This is open source software.  Please see the LICENSE section at the    #
+# end of this file or the README at the Github URL above.                 #
+#                                                                         #
+###########################################################################
+#
+# note: try to never run anything that changes the system outside of
+# bespoke exec and other wrappers. Bespoke will execute this script
+# in various modes to query its actions, so "bespoke exec" can actually
+# do nothing except when you actually want it.
+#
+# you can run this to apply without any bespoke harness (but dependencies
+# will be inferred on-the-fly rather than being known ahead of time)
+#
+# example.bs depend     # inspects script and prints dependencies
+# example.bs quiesce    # stops or removes service from prodcution
+# example.bs install    # install system software
+# example.bs configure  # install configuration
+# example.bs initialize # initialize the service for the first time
+# example.bs upgrade    # upgrade to latest revision where necessary (e.g. schema)
+# example.bs reload     # start if necessary, otherwise try to do a graceful reload of configuration
+
+case "$1" in
+  INITCTL=upstart
+  INITSVC=mysql-server
+
+  name)
+    basename $0
+    ;;
+
+  # enter maintenance mode / quiescent state
+  quiesce)
+    # stop the database using upstart
+    bespoke exec stop mysql
+    ;;
+
+  # install system software as necessary
+  # the environment will be set up automatically for non-interactive installation
+  install)
+    # depend on ubuntu-apt softly, if it fails/is not available, continue anyways
+    bespoke parent --soft ubuntu-apt
+    bespoke exec apt-get -y install mysql-server
+    ;;
+
+  # put dependencies not otherwise inferrable here
+  # things like repos used below are automatically depended upon
+  depend)
+    bespoke depend company-ca-client
+    bespoke depend company-ntp-client
+    # this could be fun ... depend would figure out its caller, call it back through all the required
+    # modes (install/configure/etc.) in introspection mode to find dependencies, then print them out
+    bespoke depend --print
+    ;;
+
+  # apply configuration items to the system
+  configure)
+
+    # pull an rsync overlay over root
+    bespoke apply --rsync rsync://rsync.company.com/mysql -d /
+
+    # apply a git tree object recursively
+    # 'bespoke apply' will happly re-write the data (if it changed) every time it's called - see upgrade for history tracking
+    bespoke apply --repo company-ops.git -o 61fd7dcdec31684650d8a80e4f11e7ea34da7fb6 -f /etc/my.cnf
+    bespoke apply --repo company-ops.git -o c0b917f95ef3fc5e52e48c524dc0fa220d0cc60d -f /etc/ssl/private/mysql-key.pem
+    bespoke apply --repo company-ops.git -o b4fb99061471096a3b90d787209ebe0b8f4f5d61 -f /etc/ssl/certs/mysql-cert.pem
+    bespoke apply --repo company-ops.git -o 832ce40202b24a4d4e401f40efb7588d84657e1a -f /etc/init/mysql
+    bespoke apply --repo company-ops.git -o ea73b67daa1d59a33e592ff6e577fa5104e29221 -f /etc/defaults/mysql
+
+    # apply a different version of my.cnf after June 30
+    bespoke apply --after 2011-06-30 --repo company-ops.git -o 61fd7dcdec31684650d8a80e4f11e7ea34da7fb6 -f /etc/my.cnf
+    ;;
+
+  # various upgrade
+  upgrade)
+    # these will apply in order, but only once (history is tracked in local bespoke repo)
+    # the object is automatically pulled down from the default source repo
+    bespoke upgrade --after 2010-05-21 --repo company.git -o e606f9c80e3b8f2e720e554df2be8de288a03574 --pipe "mysql -u root"
+    bespoke upgrade --after 2010-06-03 --repo company.git -o 4322dcad94c5cea5dfe5d0826ed709ef2e85cc53 --pipe "mysql -u root"
+    bespoke upgrade --after 2011-01-03 --repo company.git -o cdfbef8a5dc6a876cc06747484d6cbbe30aabf84 --pipe "mysql -u root"
+    bespoke upgrade --repo company.git -o f3704a4f31b7f4a1b1a1d8260929bd23302abe6b --pipe "mysql -u root"
+    bespoke upgrade --repo company.git -o f62e6470778711b0c50c0e902e4388d3b47cec24 --pipe "mysql -u root"
+    bespoke upgrade --repo company.git -o 4dca261d70f0d6d3dcc22182f9f8accb7ffb210b --pipe "mysql -u root"
+    bespoke upgrade --repo company.git -o ceb341b1b421213f37f19063e2cf884649402ed4 --pipe "mysql -u root"
+    ;;
+
+  # reload the service to pick up new configuration
+  # this may just call system init, or directly implement hot restarts, HUP's, and similar
+  # this should start the service if it's not already running
+  reload)
+    # just bounce with upstart
+    bespoke exec restart mysql
+    ;;
+
+  # destroy the service, ideally cleaning up any artifacts left over
+  destroy)
+    bespoke exec $0 quiesce
+    bespoke exec $0 stop
+    bespoke exec rm -f /etc/my.cnf
+    bespoke exec rm -rf /var/lib/mysql
+    ;;
+
+  *)
+    echo "Usage: $0 {maintain|install|configure|destroy|dependencies}"
+    ;;
+esac
+

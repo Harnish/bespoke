@@ -91,16 +91,29 @@ sub init {
         }
     }
 
+    my $allowed  = delete $args_out{allowed};
+    my $required = delete $args_out{required};
+
     # support minimal arg presence checking
     # ->init(@_, required => [qw(abcd efg)])
-    if ($args_out{required}) {
-        if (ref($args_out{required}) eq 'ARRAY') {
-            foreach my $arg (@{$args_out{required}}) {
-                confess "'$arg' parameter is required." unless (exists $args_out{$arg});
-            }
+    if ($required) {
+        confess "BUG in subclass init() usage: required param list must be an array ref"
+            unless (ref $required) eq 'ARRAY');
+
+        foreach my $arg (@$required) {
+            confess "'$arg' parameter is required." unless (exists $args_out{$arg});
         }
-        else {
-            confess "BUG in subclass init() usage.";
+    }
+
+    if ($allowed) {
+        confess "BUG in subclass init() usage: allowed param list must be an array ref"
+            unless (ref $allowed eq 'ARRAY');
+
+        my @all = (@$allowed, @$required);
+
+        foreach my $arg (keys %$args_out) {
+            confess "'$arg' is not recognized/allowed"
+                unless grep {$arg eq $_}, (@$allowed, @$required);
         }
     }
 
